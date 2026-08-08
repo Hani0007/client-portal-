@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Livewire\Agency\AgencyCreate;
 use App\Http\Livewire\Agency\ClientsCreate;
 use App\Http\Livewire\Agency\ClientsIndex;
@@ -14,9 +16,7 @@ use App\Models\Invoice;
 use App\Models\User;
 use App\Models\projects as Project;
 use App\Models\deliverables as Deliverable;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\StripeWebhookController;
 
 Route::view('/', 'welcome')->name('home');
 
@@ -30,60 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
 
     // Checkout endpoint (creates a Stripe Checkout Session) - accessible to agency owners and clients
-    Route::post('/invoices/{invoice}/checkout', function (App\Models\Invoice $invoice) {
-        $user = auth()->user();
-        if (! $user) {
-            return response()->json(['error' => 'Unauthenticated'], 401);
-        }
-
-        // Authorize: agency owners can act for their agency; clients can pay invoices assigned to them
-        if ($user->hasRole('agency_owner')) {
-            $agency = $user->agency;
-            if (! $agency || $invoice->project->agency_id !== $agency->id) {
-                abort(403);
-            }
-        } elseif ($user->can('pay-invoice')) {
-            // Client with pay-invoice permission - allow payment
-            // No strict client record check required
-        } else {
-            abort(403);
-        }
-
-        if (! config('services.stripe.secret')) {
-            return response()->json(['error' => 'Stripe not configured'], 500);
-        }
-
-        try {
-            \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
-            $amountCents = (int) round($invoice->amount * 100);
-
-            $session = \Stripe\Checkout\Session::create([
-                'payment_method_types' => ['card'],
-                'line_items' => [[
-                    'price_data' => [
-                        'currency' => 'usd',
-                        'product_data' => [
-                            'name' => 'Invoice #' . $invoice->id,
-                            'description' => $invoice->project?->name,
-                        ],
-                        'unit_amount' => $amountCents,
-                    ],
-                    'quantity' => 1,
-                ]],
-                'mode' => 'payment',
-                'success_url' => route('invoices.success', $invoice->id) . '?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => route('invoices.show', $invoice->id),
-                'metadata' => [
-                    'invoice_id' => $invoice->id,
-                ],
-            ]);
-
-            return response()->json(['url' => $session->url]);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-
-    })->name('invoices.checkout');
+    Route::post('/invoices/{invoice}/checkout', [PaymentController::class, 'checkout'])->name('invoices.checkout');
 
     Route::middleware('role:agency_owner')->group(function () {
         Route::get('/agency', function () {
@@ -298,24 +245,7 @@ Route::middleware('auth')->group(function () {
 
     // Success redirect - mark invoice as paid and create payment record
     // Accessible to both agency owners and clients
-    Route::get('/invoices/{invoice}/success', function (App\Models\Invoice $invoice, Request $request) {
-        $sessionId = $request->query('session_id');
-        
-        // Update invoice status to paid if not already paid
-        if ($invoice->status !== 'paid' && $sessionId) {
-            $invoice->update(['status' => 'paid']);
-            
-            // Create payment record
-            App\Models\Payment::create([
-                'invoice_id' => $invoice->id,
-                'amount_paid' => $invoice->amount,
-                'payment_method' => 'card',
-                'paid_at' => now(),
-            ]);
-        }
-        
-        return view('invoice_success', compact('invoice'));
-    })->name('invoices.success');
+    Route::get('/invoices/{invoice}/success', [PaymentController::class, 'success'])->name('invoices.success');
 
     Route::middleware('role:client')->group(function () {
         Route::get('/client', function () {
