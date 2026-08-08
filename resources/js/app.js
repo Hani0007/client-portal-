@@ -1,3 +1,1 @@
-import.meta.glob([
-    '../resources/views/**/*.blade.php',
-]);
+console.log('App loaded');

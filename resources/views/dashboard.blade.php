@@ -12,18 +12,36 @@
 
         <div class="grid gap-4 sm:grid-cols-2">
             @role('agency_owner')
-                <div class="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-                    <h2 class="mb-2 text-lg font-semibold text-slate-900">Agency Portal</h2>
-                    <p class="text-sm text-slate-600">You can create projects, upload deliverables, and manage client work.</p>
-                    <a href="{{ route('agency.home') }}" class="mt-4 inline-flex rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">Open Agency Area</a>
+                <div class="sm:col-span-2 rounded-3xl border border-slate-200 bg-slate-50 p-6 w-full">
+                    <div class="flex items-start justify-between gap-4 w-full">
+                        <div>
+                            <h2 class="mb-2 text-lg font-semibold text-slate-900">Agency Portal</h2>
+                            <p class="text-sm text-slate-600">You have agency owner privileges. Manage clients, projects, deliverables, and invoices from your agency area.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            @php $agency = auth()->user()->agency; @endphp
+                            @if($agency)
+                                <a href="{{ route('agency.home') }}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700">Open Agency Area</a>
+                            @else
+                                <a href="{{ route('agency.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700">Create Agency</a>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             @endrole
 
             @role('client')
-                <div class="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-                    <h2 class="mb-2 text-lg font-semibold text-slate-900">Client Portal</h2>
-                    <p class="text-sm text-slate-600">You can review deliverables, send messages, and pay invoices.</p>
-                    <a href="{{ route('client.home') }}" class="mt-4 inline-flex rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">Open Client Area</a>
+                <div class="sm:col-span-2 rounded-3xl border border-slate-200 bg-slate-50 p-6 w-full">
+                    <div class="flex items-start justify-between gap-4 w-full">
+                        <div>
+                            <h2 class="mb-2 text-lg font-semibold text-slate-900">Client Portal</h2>
+                            <p class="text-sm text-slate-600">You have client privileges. Manage your projects, view deliverables, and interact with your agency.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            @php $client = auth()->user()->client; @endphp
+                            <a href="{{ route('client.home') }}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700">Open Client Area</a>
+                        </div>
+                    </div>
                 </div>
             @endrole
 

@@ -108,7 +108,7 @@
                 </div>
             </div>
 
-            {{-- SIDEBAR: QUICK ACTIONS + CLIENTS --}}
+            {{-- SIDEBAR: QUICK ACTIONS + INVOICES + CLIENTS --}}
             <div class="space-y-6">
 
                 {{-- Quick Actions --}}
@@ -133,6 +133,37 @@
                             </svg>
                             Send Invoice
                         </a>
+                    </div>
+                </div>
+
+                {{-- Recent Invoices --}}
+                <div class="rounded-2xl border border-slate-200 bg-white p-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-base font-semibold text-slate-900">Recent Invoices</h2>
+                        <a href="{{ route('invoices.create') }}" class="text-xs font-medium text-emerald-600 hover:text-emerald-700">Create new</a>
+                    </div>
+
+                    <div class="mt-4 space-y-3">
+                        @forelse($invoices ?? [] as $invoice)
+                            <div class="flex items-center justify-between p-3 border border-slate-100 rounded-xl">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-900">Invoice #{{ $invoice->id }}</p>
+                                    <p class="text-xs text-slate-500">{{ $invoice->project->client->name ?? 'Unknown' }} • ${{ number_format($invoice->amount, 2) }}</p>
+                                </div>
+                                @php
+                                    $statusStyles = [
+                                        'sent' => 'bg-amber-50 text-amber-700',
+                                        'paid' => 'bg-emerald-50 text-emerald-700',
+                                        'pending' => 'bg-amber-50 text-amber-700',
+                                    ];
+                                @endphp
+                                <span class="rounded-full px-2 py-1 text-xs font-semibold {{ $statusStyles[$invoice->status] ?? 'bg-slate-100 text-slate-700' }}">
+                                    {{ ucfirst($invoice->status) }}
+                                </span>
+                            </div>
+                        @empty
+                            <p class="text-sm text-slate-500">No invoices yet.</p>
+                        @endforelse
                     </div>
                 </div>
 
