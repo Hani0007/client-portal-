@@ -16,6 +16,7 @@ use App\Models\Invoice;
 use App\Models\User;
 use App\Models\projects as Project;
 use App\Models\deliverables as Deliverable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -128,12 +129,23 @@ Route::middleware('auth')->group(function () {
             if (request()->hasFile('file')) {
                 $path = request()->file('file')->store('deliverables');
             }
-            Deliverable::create([
+            $deliverable = Deliverable::create([
                 'project_id' => $project->id,
                 'uploaded_by' => auth()->id(),
                 'title' => $data['title'],
                 'file_path' => $path,
             ]);
+
+            // Create pending approval if project has a client
+            if ($project->client_id) {
+                approvales::create([
+                    'deliverable_id' => $deliverable->id,
+                    'client_id' => $project->client_id,
+                    'status' => 'pending',
+                    'comments' => null,
+                ]);
+            }
+
             return redirect()->route('projects.show', $project->id)->with('success', 'Deliverable uploaded.');
         })->name('projects.deliverables.store');
 
@@ -269,5 +281,64 @@ Route::middleware('auth')->group(function () {
                 'recentInvoices' => $recentInvoices,
             ]);
         })->name('client.home');
+
+        // Approve deliverable
+        Route::post('/deliverables/{deliverable}/approve', function (App\Models\deliverables $deliverable) {
+            $client = auth()->user()?->client;
+            if (!$client) {
+                abort(403);
+            }
+
+            // Verify deliverable belongs to client's project
+            if ($deliverable->project->client_id !== $client->id) {
+                abort(403);
+            }
+
+            // Create or update approval
+            App\Models\approvales::updateOrCreate(
+                [
+                    'deliverable_id' => $deliverable->id,
+                    'client_id' => $client->id,
+                ],
+                [
+                    'status' => 'approved',
+                    'comments' => null,
+                ]
+            );
+
+            return redirect()->route('client.home')->with('success', 'Deliverable approved.');
+        })->name('deliverables.approve');
+
+        // Reject deliverable (request changes)
+        Route::post('/deliverables/{deliverable}/reject', function (App\Models\deliverables $deliverable, Request $request) {
+            $client = auth()->user()?->client;
+            if (!$client) {
+                abort(403);
+            }
+
+            // Verify deliverable belongs to client's project
+            if ($deliverable->project->client_id !== $client->id) {
+                abort(403);
+            }
+
+            // Validate comments
+            $request->validate([
+                'comments' => ['required', 'string'],
+            ]);
+
+            // Create or update approval with comments
+            App\Models\approvales::updateOrCreate(
+                [
+                    'deliverable_id' => $deliverable->id,
+                    'client_id' => $client->id,
+                ],
+                [
+                    'status' => 'rejected',
+                    'comments' => $request->comments,
+                ]
+            );
+
+            return redirect()->route('client.home')->with('success', 'Change request submitted.');
+        })->name('deliverables.reject');
     });
 });

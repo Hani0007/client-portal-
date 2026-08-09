@@ -34,6 +34,10 @@
                         @else
                             <ul class="mt-3 space-y-3">
                                 @foreach($recentDeliverables as $d)
+                                    @php
+                                        $approval = $d->approvals()->where('client_id', $client->id)->first();
+                                        $approvalStatus = $approval ? $approval->status : null;
+                                    @endphp
                                     <li class="flex items-center justify-between p-3 border rounded-md">
                                         <div>
                                             <p class="font-medium">{{ $d->title }}</p>
@@ -43,8 +47,29 @@
                                             @if($d->file_path)
                                                 <a href="{{ asset('storage/' . $d->file_path) }}" class="text-sm text-emerald-600">Download</a>
                                             @endif
-                                            <a href="#" class="text-sm text-slate-500">Request changes</a>
+                                            @if($approvalStatus === 'approved')
+                                                <span class="text-sm text-emerald-600 font-medium">Approved</span>
+                                            @elseif($approvalStatus === 'rejected')
+                                                <span class="text-sm text-amber-600 font-medium">Changes Requested</span>
+                                            @else
+                                                <form method="POST" action="{{ route('deliverables.approve', $d->id) }}" class="inline">
+                                                    @csrf
+                                                    <button type="submit" class="text-sm inline-flex items-center rounded-md bg-emerald-600 px-3 py-1 text-white hover:bg-emerald-700">Approve</button>
+                                                </form>
+                                                <button onclick="toggleCommentForm({{ $d->id }})" class="text-sm inline-flex items-center rounded-md bg-amber-600 px-3 py-1 text-white hover:bg-amber-700">Request Changes</button>
+                                            @endif
                                         </div>
+                                    </li>
+                                    {{-- Comment form for change requests --}}
+                                    <li id="comment-form-{{ $d->id }}" class="hidden">
+                                        <form method="POST" action="{{ route('deliverables.reject', $d->id) }}" class="mt-2">
+                                            @csrf
+                                            <textarea name="comments" rows="3" placeholder="Please describe the changes needed..." class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm"></textarea>
+                                            <div class="mt-2 flex gap-2">
+                                                <button type="submit" class="text-sm inline-flex items-center rounded-md bg-amber-600 px-3 py-1 text-white hover:bg-amber-700">Submit Request</button>
+                                                <button type="button" onclick="toggleCommentForm({{ $d->id }})" class="text-sm inline-flex items-center rounded-md bg-slate-200 px-3 py-1 text-slate-700 hover:bg-slate-300">Cancel</button>
+                                            </div>
+                                        </form>
                                     </li>
                                 @endforeach
                             </ul>
@@ -107,4 +132,11 @@
             </div>
         @endif
     </div>
+
+    <script>
+        function toggleCommentForm(deliverableId) {
+            const form = document.getElementById('comment-form-' + deliverableId);
+            form.classList.toggle('hidden');
+        }
+    </script>
 @endsection

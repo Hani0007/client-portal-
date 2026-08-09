@@ -22,14 +22,33 @@
             @else
                 <ul class="space-y-3">
                     @foreach($deliverables as $d)
+                        @php
+                            $approval = $d->approvals()->first();
+                            $approvalStatus = $approval ? $approval->status : null;
+                            $approvalComments = $approval ? $approval->comments : null;
+                        @endphp
                         <li class="flex items-center justify-between p-3 border-b last:border-b-0">
-                            <div>
+                            <div class="flex-1">
                                 <p class="font-medium">{{ $d->title }}</p>
                                 <p class="text-xs text-slate-500">Uploaded {{ $d->created_at->diffForHumans() }}</p>
+                                @if($approvalStatus === 'approved')
+                                    <span class="inline-block mt-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">Approved</span>
+                                @elseif($approvalStatus === 'rejected')
+                                    <div class="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                                        <p class="text-xs font-medium text-amber-700">Changes Requested</p>
+                                        @if($approvalComments)
+                                            <p class="text-xs text-amber-600 mt-1">{{ $approvalComments }}</p>
+                                        @endif
+                                    </div>
+                                @elseif($approvalStatus === 'pending')
+                                    <span class="inline-block mt-1 text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-full">Pending Approval</span>
+                                @endif
                             </div>
-                            @if($d->file_path)
-                                <a href="{{ asset('storage/' . $d->file_path) }}" class="text-sm text-emerald-600">Download</a>
-                            @endif
+                            <div class="flex items-center gap-3">
+                                @if($d->file_path)
+                                    <a href="{{ asset('storage/' . $d->file_path) }}" class="text-sm text-emerald-600">Download</a>
+                                @endif
+                            </div>
                         </li>
                     @endforeach
                 </ul>
