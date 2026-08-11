@@ -25,6 +25,38 @@
                 <p class="mt-2 text-sm text-rose-700">Your account is not connected to a client record. Please contact your agency administrator.</p>
             </div>
         @else
+            {{-- STATS ROW --}}
+            <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div class="rounded-2xl border border-slate-200 bg-white p-5">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Projects</p>
+                    <p class="mt-2 text-2xl font-bold text-slate-900">{{ $client->projects()->count() ?? 0 }}</p>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-5">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Pending Deliverables</p>
+                    <p class="mt-2 text-2xl font-bold text-amber-600">{{ $recentDeliverables->filter(fn($d) => $d->approvals()->where('client_id', $client->id)->where('status', 'pending')->exists())->count() ?? 0 }}</p>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-5">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Unpaid Invoices</p>
+                    <p class="mt-2 text-2xl font-bold text-rose-600">${{ number_format($recentInvoices->where('status', '!=', 'paid')->sum('amount') ?? 0, 2) }}</p>
+                </div>
+            </div>
+
+            {{-- CHARTS ROW --}}
+            <div class="mb-6 grid gap-6 lg:grid-cols-2">
+                <div class="rounded-2xl border border-slate-200 bg-white p-6">
+                    <h2 class="text-base font-semibold text-slate-900 mb-4">Deliverable Status</h2>
+                    <div class="relative" style="height: 250px;">
+                        <canvas id="deliverableStatusChart"></canvas>
+                    </div>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-6">
+                    <h2 class="text-base font-semibold text-slate-900 mb-4">Invoice Payment Status</h2>
+                    <div class="relative" style="height: 250px;">
+                        <canvas id="invoicePaymentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid gap-6 lg:grid-cols-3">
                 <div class="lg:col-span-2">
                     <div class="rounded-2xl border border-slate-200 bg-white p-6 mb-6">
@@ -137,6 +169,93 @@
         function toggleCommentForm(deliverableId) {
             const form = document.getElementById('comment-form-' + deliverableId);
             form.classList.toggle('hidden');
+        }
+
+        // Deliverable Status Chart
+        const deliverableStatusCtx = document.getElementById('deliverableStatusChart');
+        if (deliverableStatusCtx) {
+            const approvedCount = {{ $recentDeliverables->filter(fn($d) => $d->approvals()->where('client_id', $client->id)->where('status', 'approved')->exists())->count() ?? 0 }};
+            const pendingCount = {{ $recentDeliverables->filter(fn($d) => $d->approvals()->where('client_id', $client->id)->where('status', 'pending')->exists())->count() ?? 0 }};
+            const rejectedCount = {{ $recentDeliverables->filter(fn($d) => $d->approvals()->where('client_id', $client->id)->where('status', 'rejected')->exists())->count() ?? 0 }};
+
+            const deliverableStatusData = {
+                labels: ['Approved', 'Pending', 'Changes Requested'],
+                datasets: [{
+                    label: 'Deliverables',
+                    data: [approvedCount, pendingCount, rejectedCount],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(245, 158, 11, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(245, 158, 11, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            new Chart(deliverableStatusCtx, {
+                type: 'pie',
+                data: deliverableStatusData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Invoice Payment Status Chart
+        const invoicePaymentCtx = document.getElementById('invoicePaymentChart');
+        if (invoicePaymentCtx) {
+            const paidCount = {{ $recentInvoices->where('status', 'paid')->count() ?? 0 }};
+            const unpaidCount = {{ $recentInvoices->where('status', '!=', 'paid')->count() ?? 0 }};
+
+            const invoicePaymentData = {
+                labels: ['Paid', 'Unpaid'],
+                datasets: [{
+                    label: 'Invoices',
+                    data: [paidCount, unpaidCount],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(239, 68, 68, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(239, 68, 68, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            new Chart(invoicePaymentCtx, {
+                type: 'doughnut',
+                data: invoicePaymentData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
         }
     </script>
 @endsection

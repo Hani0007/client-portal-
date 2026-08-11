@@ -31,6 +31,19 @@ class ProjectController extends Controller
     }
 
     /**
+     * Show the form for creating a new project
+     */
+    public function create()
+    {
+        $agency = auth()->user()?->agency;
+        if (!$agency) {
+            return redirect()->route('agency.create');
+        }
+        $clients = Client::where('agency_id', $agency->id)->orderBy('name')->get();
+        return view('agency.projects.create', compact('clients'));
+    }
+
+    /**
      * Store a newly created project
      */
     public function store(StoreProjectRequest $request)
@@ -117,6 +130,10 @@ class ProjectController extends Controller
         $project = Project::find($request->project_id);
         if (!$project || $project->agency_id !== $agency->id) {
             abort(403);
+        }
+
+        if (!$project->client_id) {
+            return redirect()->route('invoices.create')->with('error', 'Cannot create invoice for a project without an assigned client.');
         }
 
         Invoice::create([

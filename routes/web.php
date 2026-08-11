@@ -32,15 +32,7 @@ Route::middleware('auth')->group(function () {
 
         // Projects listing & creation
         Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
-        Route::get('/projects/create', function () {
-            $agency = auth()->user()?->agency;
-            if (! $agency) {
-                return redirect()->route('agency.create');
-            }
-            $clients = Client::where('agency_id', $agency->id)->orderBy('name')->get();
-            return view('agency.projects.create', compact('clients'));
-        })->name('projects.create');
-          
+        Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
         Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
         Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
         Route::post('/projects/{project}/deliverables', [ProjectController::class, 'storeDeliverable'])->name('projects.deliverables.store');
@@ -54,7 +46,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/invoices/create', [ProjectController::class, 'createInvoice'])->name('invoices.create');
 
         Route::post('/invoices', [ProjectController::class, 'storeInvoice'])->name('invoices.store');
-        Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name('stripe.webhook')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class]);
     });
 
     Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
@@ -66,3 +57,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/deliverables/{deliverable}/reject', [DeliverableController::class, 'reject'])->name('deliverables.reject');
     });
 });
+
+// Stripe webhook (must be outside auth middleware - Stripe calls this directly)
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
+    ->name('stripe.webhook');

@@ -11,14 +11,15 @@
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         @livewireStyles
     </head>
     <body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
         <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
             <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <a href="{{ route('home') }}" class="text-xl font-semibold text-slate-900">{{ config('app.name', 'Client Portal') }}</a>
-                    <p class="text-sm text-slate-500">Authentication and role-based access with Spatie Permission</p>
+                    <a href="{{ route('home') }}" class="text-xl font-semibold text-slate-900">ProjectHub</a>
+                    <p class="text-sm text-slate-500">Streamline project management, client collaboration, and invoicing</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3 text-sm">

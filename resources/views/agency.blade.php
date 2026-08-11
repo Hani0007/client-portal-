@@ -62,6 +62,22 @@
 
         </div>
 
+        {{-- CHARTS ROW --}}
+        <div class="mb-8 grid gap-6 lg:grid-cols-2">
+            <div class="rounded-2xl border border-slate-200 bg-white p-6">
+                <h2 class="text-base font-semibold text-slate-900 mb-4">Project Status Overview</h2>
+                <div class="relative" style="height: 250px;">
+                    <canvas id="projectStatusChart"></canvas>
+                </div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-6">
+                <h2 class="text-base font-semibold text-slate-900 mb-4">Invoice Status</h2>
+                <div class="relative" style="height: 250px;">
+                    <canvas id="invoiceStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <div class="grid gap-6 lg:grid-cols-3">
 
             {{-- PROJECTS LIST --}}
@@ -194,4 +210,102 @@
             </div>
         </div>
     @endunless
+
+    @if($agencyExists ?? false)
+        <script>
+            // Project Status Chart
+            const projectStatusCtx = document.getElementById('projectStatusChart');
+            if (projectStatusCtx) {
+                const projectStatusData = {
+                    labels: ['In Progress', 'Completed', 'Waiting Approval'],
+                    datasets: [{
+                        label: 'Projects',
+                        data: [
+                            {{ $projects->where('status', 'in_progress')->count() ?? 0 }},
+                            {{ $projects->where('status', 'completed')->count() ?? 0 }},
+                            {{ $projects->where('status', 'waiting_approval')->count() ?? 0 }}
+                        ],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(245, 158, 11, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
+
+                new Chart(projectStatusCtx, {
+                    type: 'doughnut',
+                    data: projectStatusData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 15
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Invoice Status Chart
+            const invoiceStatusCtx = document.getElementById('invoiceStatusChart');
+            if (invoiceStatusCtx) {
+                const invoiceStatusData = {
+                    labels: ['Paid', 'Sent', 'Pending'],
+                    datasets: [{
+                        label: 'Invoices',
+                        data: [
+                            {{ $invoices->where('status', 'paid')->count() ?? 0 }},
+                            {{ $invoices->where('status', 'sent')->count() ?? 0 }},
+                            {{ $invoices->where('status', 'pending')->count() ?? 0 }}
+                        ],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(239, 68, 68, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
+
+                new Chart(invoiceStatusCtx, {
+                    type: 'bar',
+                    data: invoiceStatusData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        </script>
+    @endif
 @endsection

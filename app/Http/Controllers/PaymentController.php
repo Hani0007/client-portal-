@@ -27,8 +27,6 @@ class PaymentController extends Controller
                 abort(403);
             }
         } elseif ($user->can('pay-invoice')) {
-            // Client with pay-invoice permission - allow payment
-            // No strict client record check required
         } else {
             abort(403);
         }
@@ -73,21 +71,8 @@ class PaymentController extends Controller
      */
     public function success(Invoice $invoice, Request $request)
     {
-        $sessionId = $request->query('session_id');
-
-        // Update invoice status to paid if not already paid
-        if ($invoice->status !== 'paid' && $sessionId) {
-            $invoice->update(['status' => 'paid']);
-
-            // Create payment record
-            Payment::create([
-                'invoice_id' => $invoice->id,
-                'amount_paid' => $invoice->amount,
-                'payment_method' => 'card',
-                'paid_at' => now(),
-            ]);
-        }
-
+        // Webhook handles the actual payment confirmation
+        // This just shows a success message to the user
         return view('invoice_success', compact('invoice'));
     }
 }
