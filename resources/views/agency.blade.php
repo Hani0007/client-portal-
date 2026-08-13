@@ -82,6 +82,39 @@
 
             {{-- PROJECTS LIST --}}
             <div class="lg:col-span-2">
+                {{-- CHARTS SECTION --}}
+                <div class="rounded-2xl border border-slate-200 bg-white mb-6">
+                    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                        <h2 class="text-base font-semibold text-slate-900">Overview Statistics</h2>
+                    </div>
+                    <div class="p-6 grid gap-6 lg:grid-cols-2">
+                        <div>
+                            <h3 class="text-sm font-medium text-slate-700 mb-4">Total Clients vs Projects</h3>
+                            <div style="height: 200px;">
+                                <canvas id="clientsProjectsChart"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-slate-700 mb-4">Project Status Breakdown</h3>
+                            <div style="height: 200px;">
+                                <canvas id="projectStatusBreakdownChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- OVERALL SYSTEM PREVIEW LINE CHART --}}
+                <div class="rounded-2xl border border-slate-200 bg-white mb-6">
+                    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                        <h2 class="text-base font-semibold text-slate-900">Overall System Preview</h2>
+                    </div>
+                    <div class="p-6">
+                        <div style="height: 300px;">
+                            <canvas id="overallSystemPreviewChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="rounded-2xl border border-slate-200 bg-white">
                     <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
                         <h2 class="text-base font-semibold text-slate-900">Recent Projects</h2>
@@ -293,6 +326,143 @@
                         plugins: {
                             legend: {
                                 display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Total Clients vs Projects Chart
+            const clientsProjectsCtx = document.getElementById('clientsProjectsChart');
+            if (clientsProjectsCtx) {
+                new Chart(clientsProjectsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Total Clients', 'Total Projects'],
+                        datasets: [{
+                            label: 'Count',
+                            data: [{{ $totalClientsCount ?? 0 }}, {{ $totalProjectsCount ?? 0 }}],
+                            backgroundColor: [
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(59, 130, 246, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgba(16, 185, 129, 1)',
+                                'rgba(59, 130, 246, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Project Status Breakdown Chart
+            const projectStatusBreakdownCtx = document.getElementById('projectStatusBreakdownChart');
+            if (projectStatusBreakdownCtx) {
+                new Chart(projectStatusBreakdownCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['In Progress', 'Completed', 'Rejected'],
+                        datasets: [{
+                            label: 'Projects',
+                            data: [{{ $inProgressProjectsCount ?? 0 }}, {{ $completedProjectsCount ?? 0 }}, {{ $rejectedProjectsCount ?? 0 }}],
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(239, 68, 68, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgba(59, 130, 246, 1)',
+                                'rgba(16, 185, 129, 1)',
+                                'rgba(239, 68, 68, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 15
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Overall System Preview Line Chart
+            const overallSystemPreviewCtx = document.getElementById('overallSystemPreviewChart');
+            if (overallSystemPreviewCtx) {
+                const monthlyData = @json($monthlyData ?? []);
+                const labels = monthlyData.map(item => item.month);
+                const projectsData = monthlyData.map(item => item.projects);
+                const clientsData = monthlyData.map(item => item.clients);
+
+                new Chart(overallSystemPreviewCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Projects',
+                                data: projectsData,
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Clients',
+                                data: clientsData,
+                                borderColor: 'rgba(16, 185, 129, 1)',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 15
+                                }
                             }
                         },
                         scales: {

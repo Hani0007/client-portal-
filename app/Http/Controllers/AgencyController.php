@@ -43,6 +43,46 @@ class AgencyController extends Controller
             $unpaidInvoicesTotal = Invoice::whereHas('project', fn ($query) => $query->where('agency_id', $agency->id))
                 ->where('status', '!=', 'paid')
                 ->sum('amount');
+
+            // Chart data
+            $totalClientsCount = Client::where('agency_id', $agency->id)->count();
+            $totalProjectsCount = Project::where('agency_id', $agency->id)->count();
+            $inProgressProjectsCount = Project::where('agency_id', $agency->id)
+                ->where('status', 'in_progress')
+                ->count();
+            $completedProjectsCount = Project::where('agency_id', $agency->id)
+                ->where('status', 'completed')
+                ->count();
+            $rejectedProjectsCount = Project::where('agency_id', $agency->id)
+                ->where('status', 'rejected')
+                ->count();
+
+            // Overall system preview data (last 6 months)
+            $monthlyData = [];
+            $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            $currentMonth = date('n');
+            $currentYear = date('Y');
+
+            for ($i = 5; $i >= 0; $i--) {
+                $month = ($currentMonth - $i + 11) % 12 + 1;
+                $year = $currentMonth - $i < 1 ? $currentYear - 1 : $currentYear;
+
+                $projectsCount = Project::where('agency_id', $agency->id)
+                    ->whereYear('created_at', $year)
+                    ->whereMonth('created_at', $month)
+                    ->count();
+
+                $clientsCount = Client::where('agency_id', $agency->id)
+                    ->whereYear('created_at', $year)
+                    ->whereMonth('created_at', $month)
+                    ->count();
+
+                $monthlyData[] = [
+                    'month' => $months[$month - 1],
+                    'projects' => $projectsCount,
+                    'clients' => $clientsCount,
+                ];
+            }
         }
 
         return view('agency', [
@@ -54,6 +94,12 @@ class AgencyController extends Controller
             'clientsCount' => $clientsCount,
             'pendingApprovalsCount' => $pendingApprovalsCount,
             'unpaidInvoicesTotal' => $unpaidInvoicesTotal,
+            'totalClientsCount' => $totalClientsCount ?? 0,
+            'totalProjectsCount' => $totalProjectsCount ?? 0,
+            'inProgressProjectsCount' => $inProgressProjectsCount ?? 0,
+            'completedProjectsCount' => $completedProjectsCount ?? 0,
+            'rejectedProjectsCount' => $rejectedProjectsCount ?? 0,
+            'monthlyData' => $monthlyData ?? [],
         ]);
     }
 
