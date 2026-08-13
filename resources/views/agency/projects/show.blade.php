@@ -33,11 +33,22 @@
                                 <p class="text-xs text-slate-500">Uploaded {{ $d->created_at->diffForHumans() }}</p>
                                 @if($approvalStatus === 'approved')
                                     <span class="inline-block mt-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">Approved</span>
-                                @elseif($approvalStatus === 'rejected')
+                                @elseif($approvalStatus === 'rejected' || $approvalStatus === 'completed')
+                                    @php
+                                        $changeRequestItems = $approval ? $approval->changeRequestItems : collect();
+                                        $pendingItems = $changeRequestItems->where('is_completed', false);
+                                        $allCompleted = $changeRequestItems->isNotEmpty() && $changeRequestItems->every(fn($item) => $item->is_completed);
+                                    @endphp
                                     <div class="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-                                        <p class="text-xs font-medium text-amber-700">Changes Requested</p>
-                                        @if($approvalComments)
-                                            <p class="text-xs text-amber-600 mt-1">{{ $approvalComments }}</p>
+                                        <p class="text-xs font-medium text-amber-700">
+                                            @if($allCompleted)
+                                                All Changes Completed
+                                            @else
+                                                Changes Requested ({{ $pendingItems->count() }} pending)
+                                            @endif
+                                        </p>
+                                        @if($changeRequestItems->isNotEmpty())
+                                            <button onclick="openChangeRequestModal({{ $approval->id }})" class="text-xs text-amber-600 mt-1 underline">View Details</button>
                                         @endif
                                     </div>
                                 @elseif($approvalStatus === 'pending')
@@ -103,4 +114,64 @@
             </form>
         </div>
     </div>
+
+    <!-- Change Request Modal -->
+    <div id="changeRequestModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Change Request Details</h3>
+                <button onclick="closeChangeRequestModal()" class="text-slate-500 hover:text-slate-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="changeRequestForm" method="POST" action="">
+                @csrf
+                <div id="changeRequestItems" class="space-y-3 mb-4">
+                    <!-- Items will be loaded dynamically -->
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeChangeRequestModal()" class="px-4 py-2 text-sm rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm rounded-xl bg-emerald-600 text-white hover:bg-emerald-700">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openChangeRequestModal(approvalId) {
+            const modal = document.getElementById('changeRequestModal');
+            const form = document.getElementById('changeRequestForm');
+            const itemsContainer = document.getElementById('changeRequestItems');
+
+            // Set form action
+            form.action = '/approvals/' + approvalId + '/change-requests';
+
+            // Fetch change request items
+            fetch('/api/change-requests/' + approvalId)
+                .then(response => response.json())
+                .then(data => {
+                    itemsContainer.innerHTML = '';
+                    data.items.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-start gap-3 p-3 bg-slate-50 rounded-lg';
+                        div.innerHTML = `
+                            <input type="checkbox" name="completed_items[]" value="${item.id}" ${item.is_completed ? 'checked' : ''} class="mt-1 w-4 h-4 text-emerald-600 rounded border-slate-300">
+                            <label class="text-sm text-slate-700 flex-1">${item.description}</label>
+                        `;
+                        itemsContainer.appendChild(div);
+                    });
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function closeChangeRequestModal() {
+            const modal = document.getElementById('changeRequestModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    </script>
 @endsection

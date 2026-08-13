@@ -69,11 +69,22 @@
                                     @php
                                         $approval = $d->approvals()->where('client_id', $client->id)->first();
                                         $approvalStatus = $approval ? $approval->status : null;
+                                        $changeRequestItems = $approval ? $approval->changeRequestItems : collect();
+                                        $completedItems = $changeRequestItems->where('is_completed', true);
+                                        $pendingItems = $changeRequestItems->where('is_completed', false);
+                                        $allCompleted = $changeRequestItems->isNotEmpty() && $changeRequestItems->every(fn($item) => $item->is_completed);
                                     @endphp
                                     <li class="flex items-center justify-between p-3 border rounded-md">
                                         <div>
                                             <p class="font-medium">{{ $d->title }}</p>
                                             <p class="text-xs text-slate-500">Project: {{ $d->project->name ?? '—' }} • {{ $d->created_at->diffForHumans() }}</p>
+                                            @if($approvalStatus === 'rejected' || $approvalStatus === 'completed')
+                                                @if($allCompleted)
+                                                    <p class="text-xs text-emerald-600 mt-1">✓ All changes completed - Ready for review</p>
+                                                @elseif($completedItems->isNotEmpty())
+                                                    <p class="text-xs text-amber-600 mt-1">{{ $completedItems->count() }}/{{ $changeRequestItems->count() }} changes completed</p>
+                                                @endif
+                                            @endif
                                         </div>
                                         <div class="flex items-center gap-3">
                                             @if($d->file_path)
@@ -81,8 +92,15 @@
                                             @endif
                                             @if($approvalStatus === 'approved')
                                                 <span class="text-sm text-emerald-600 font-medium">Approved</span>
-                                            @elseif($approvalStatus === 'rejected')
-                                                <span class="text-sm text-amber-600 font-medium">Changes Requested</span>
+                                            @elseif($approvalStatus === 'rejected' || $approvalStatus === 'completed')
+                                                @if($allCompleted)
+                                                    <form method="POST" action="{{ route('deliverables.approve', $d->id) }}" class="inline">
+                                                        @csrf
+                                                        <button type="submit" class="text-sm inline-flex items-center rounded-md bg-emerald-600 px-3 py-1 text-white hover:bg-emerald-700">Approve Changes</button>
+                                                    </form>
+                                                @else
+                                                    <span class="text-sm text-amber-600 font-medium">In Progress</span>
+                                                @endif
                                             @else
                                                 <form method="POST" action="{{ route('deliverables.approve', $d->id) }}" class="inline">
                                                     @csrf

@@ -2,6 +2,7 @@
 use App\Http\Controllers\AgencyClientController;
 use App\Http\Controllers\AgencyController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChangeRequestController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeliverableController;
@@ -46,6 +47,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/invoices/create', [ProjectController::class, 'createInvoice'])->name('invoices.create');
 
         Route::post('/invoices', [ProjectController::class, 'storeInvoice'])->name('invoices.store');
+
+        // Change request completion
+        Route::get('/api/change-requests/{approval}', [ChangeRequestController::class, 'show'])->name('change-requests.show');
+        Route::post('/approvals/{approval}/change-requests', [ChangeRequestController::class, 'update'])->name('change-requests.update');
     });
 
     Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');

@@ -25,4 +25,9 @@ class approvales extends Model
     {
         return $this->belongsTo(clients::class, 'client_id');
     }
+
+    public function changeRequestItems()
+    {
+        return $this->hasMany(ChangeRequestItem::class, 'approval_id');
+    }
 }

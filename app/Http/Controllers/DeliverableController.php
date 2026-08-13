@@ -35,6 +35,24 @@ class DeliverableController extends Controller
             ]
         );
 
+        // Check if all deliverables in the project are approved
+        $project = $deliverable->project;
+        $allDeliverables = $project->deliverables;
+        $allApproved = true;
+
+        foreach ($allDeliverables as $d) {
+            $approval = $d->approvals()->where('client_id', $client->id)->first();
+            if (!$approval || $approval->status !== 'approved') {
+                $allApproved = false;
+                break;
+            }
+        }
+
+        // If all deliverables are approved and project has deliverables, update project status
+        if ($allApproved && $allDeliverables->isNotEmpty()) {
+            $project->update(['status' => 'completed']);
+        }
+
         return redirect()->route('client.home')->with('success', 'Deliverable approved.');
     }
 
@@ -59,7 +77,7 @@ class DeliverableController extends Controller
         ]);
 
         // Create or update approval with comments
-        \App\Models\approvales::updateOrCreate(
+        $approval = \App\Models\approvales::updateOrCreate(
             [
                 'deliverable_id' => $deliverable->id,
                 'client_id' => $client->id,
@@ -69,6 +87,23 @@ class DeliverableController extends Controller
                 'comments' => $request->comments,
             ]
         );
+
+        // Parse comments into individual change request items (split by newlines)
+        $changeItems = array_filter(array_map('trim', explode("\n", $request->comments)));
+
+        // Delete existing change request items for this approval
+        \App\Models\ChangeRequestItem::where('approval_id', $approval->id)->delete();
+
+        // Create new change request items
+        foreach ($changeItems as $item) {
+            if (!empty($item)) {
+                \App\Models\ChangeRequestItem::create([
+                    'approval_id' => $approval->id,
+                    'description' => $item,
+                    'is_completed' => false,
+                ]);
+            }
+        }
 
         return redirect()->route('client.home')->with('success', 'Change request submitted.');
     }
