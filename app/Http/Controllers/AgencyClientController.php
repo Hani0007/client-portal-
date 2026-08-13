@@ -38,14 +38,26 @@ class AgencyClientController extends Controller
     public function store(StoreClientRequest $request)
     {
         $agency = auth()->user()->agency;
+
+        // Create user account for the client
+        $user = \App\Models\User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+        ]);
+
+        // Assign client role to the user
+        $user->assignRole('client');
+
+        // Create client record
         Client::create([
             'agency_id' => $agency->id,
-            'user_id' => auth()->id(),
+            'user_id' => $user->id,
             'name' => $request->name,
-            'email' => $request->email ?? null,
+            'email' => $request->email,
             'company_name' => $request->company_name ?? null,
         ]);
 
-        return redirect()->route('clients.index')->with('success', 'Client added.');
+        return redirect()->route('clients.index')->with('success', 'Client added. Share the login credentials with the client.');
     }
 }

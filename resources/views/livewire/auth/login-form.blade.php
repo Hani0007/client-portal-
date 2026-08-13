@@ -32,8 +32,4 @@
 
         <button type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">Login</button>
     </form>
-
-    <p class="mt-6 text-center text-sm text-slate-500">
-        Don’t have an account yet? <a href="{{ route('register') }}" class="font-semibold text-slate-900 hover:text-slate-700">Register</a>
-    </p>
 </div>

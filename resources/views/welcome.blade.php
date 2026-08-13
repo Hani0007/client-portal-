@@ -23,16 +23,12 @@
                     </p>
 
                     <div class="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <a href="{{ route('register') }}"
+                        <a href="{{ route('login') }}"
                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700">
-                            Get Started Free
+                            Sign In
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                             </svg>
-                        </a>
-                        <a href="{{ route('login') }}"
-                           class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-7 py-3.5 text-sm font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50">
-                            Sign In
                         </a>
                     </div>
 
@@ -164,9 +160,9 @@
             <h2 class="text-3xl font-bold text-white sm:text-4xl">Ready to bring your client work into one place?</h2>
             <p class="mx-auto mt-4 max-w-xl text-base text-slate-400">Join agencies and freelancers who've ditched scattered emails and spreadsheets for a single, branded client portal.</p>
             <div class="mt-8">
-                <a href="{{ route('register') }}"
+                <a href="{{ route('login') }}"
                    class="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400">
-                    Create Your Free Account
+                    Sign In to Get Started
                 </a>
             </div>
         </div>

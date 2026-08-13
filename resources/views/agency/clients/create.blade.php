@@ -4,7 +4,7 @@
     <div class="mx-auto max-w-3xl">
         <div class="mb-6">
             <h1 class="text-2xl font-bold">Add Client</h1>
-            <p class="text-sm text-slate-500">Add a new client to your agency.</p>
+            <p class="text-sm text-slate-500">Add a new client to your agency. The email and password you set will be used for client login.</p>
         </div>
 
         @if ($errors->any())
@@ -25,8 +25,18 @@
                 </label>
             </div>
             <div>
-                <label class="block text-sm font-medium text-slate-700">Email
-                    <input name="email" type="email" value="{{ old('email') }}" class="mt-2 block w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm" />
+                <label class="block text-sm font-medium text-slate-700">Email (for client login)
+                    <input name="email" type="email" value="{{ old('email') }}" required class="mt-2 block w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm" />
+                </label>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700">Password (for client login)
+                    <input name="password" type="password" required class="mt-2 block w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm" />
+                </label>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700">Confirm Password
+                    <input name="password_confirmation" type="password" required class="mt-2 block w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm" />
                 </label>
             </div>
             <div>

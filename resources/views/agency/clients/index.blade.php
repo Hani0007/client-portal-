@@ -24,15 +24,29 @@
                 <ul class="space-y-3">
                     @foreach($clients as $client)
                         <li class="flex items-center justify-between p-3 border-b last:border-b-0">
-                            <div>
+                            <div class="flex-1">
                                 <p class="font-medium">{{ $client->name }}</p>
-                                <p class="text-xs text-slate-500">{{ $client->company_name ?? $client->email }}</p>
+                                <p class="text-xs text-slate-500">{{ $client->company_name ?? 'No company' }}</p>
+                                <div class="mt-1 text-xs text-slate-600">
+                                    <span class="font-medium">Login Email:</span> {{ $client->email }}
+                                </div>
                             </div>
-                            <div class="text-sm text-slate-500">Added {{ $client->created_at->diffForHumans() }}</div>
+                            <div class="text-right">
+                                <div class="text-sm text-slate-500">Added {{ $client->created_at->diffForHumans() }}</div>
+                                <button onclick="copyEmail('{{ $client->email }}')" class="mt-1 text-xs text-emerald-600 hover:text-emerald-700">Copy Email</button>
+                            </div>
                         </li>
                     @endforeach
                 </ul>
             </div>
+
+            <script>
+                function copyEmail(email) {
+                    navigator.clipboard.writeText(email).then(() => {
+                        alert('Email copied to clipboard!');
+                    });
+                }
+            </script>
         @endif
     </div>
 @endsection

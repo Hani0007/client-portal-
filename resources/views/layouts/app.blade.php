@@ -31,8 +31,7 @@
                             <button type="submit" class="rounded-md border border-slate-200 bg-white px-4 py-2 text-slate-700 transition hover:bg-slate-100">Logout</button>
                         </form>
                     @else
-                        <a href="{{ route('login') }}" class="rounded-md border border-slate-200 px-4 py-2 text-slate-700 transition hover:bg-slate-100">Login</a>
-                        <a href="{{ route('register') }}" class="rounded-md bg-slate-900 px-4 py-2 text-white transition hover:bg-slate-700">Register</a>
+                        <a href="{{ route('login') }}" class="rounded-md bg-slate-900 px-4 py-2 text-white transition hover:bg-slate-700">Login</a>
                     @endauth
                 </div>
             </header>
